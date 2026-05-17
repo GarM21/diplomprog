@@ -121,6 +121,12 @@ LoveDA — многоклассовый датасет. Для этой зада
 python training/prepare_loveda_dataset.py
 ```
 
+LoveDA весит несколько гигабайт, поэтому загрузка может идти долго. Скрипт выводит этапы загрузки, распаковки и конвертации. Если загрузка оборвалась и zip оказался повреждён, скачайте заново:
+
+```bash
+python training/prepare_loveda_dataset.py --force-download --overwrite
+```
+
 Если LoveDA уже скачан и распакован в `dataset_raw/loveda`:
 
 ```bash
