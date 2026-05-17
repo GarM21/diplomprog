@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Загрузка модели U-Net...")
             self._predictor = GreenAreaPredictor(
                 weights_path=DEFAULT_WEIGHTS_PATH,
-                image_size=256,
+                image_size=512,
                 threshold=0.5,
                 features=64,
             )

@@ -1,6 +1,6 @@
 dataset:
-  root: dataset/urban_tree_india
-  image_size: 256
+  root: dataset/loveda_binary
+  image_size: 512
   mean: [0.485, 0.456, 0.406]
   std: [0.229, 0.224, 0.225]
 
@@ -10,13 +10,13 @@ model:
 training:
   device: auto
   seed: 42
-  epochs: 30
-  batch_size: 4
+  epochs: 50
+  batch_size: 2
   learning_rate: 0.0001
   num_workers: 0
   threshold: 0.5
   pretrained_weights:
 
 paths:
-  best_model: weights/best_unet.pth
-  last_model: weights/last_unet.pth
+  best_model: weights/loveda_best_unet.pth
+  last_model: weights/loveda_last_unet.pth

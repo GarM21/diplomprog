@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import random
 import sys
 from typing import Any
@@ -21,6 +22,16 @@ from training.metrics import DiceLoss, dice_coefficient, iou_score, pixel_accura
 def load_config(config_path: str | Path) -> dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as file:
         return yaml.safe_load(file)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train U-Net for green-area segmentation.")
+    parser.add_argument(
+        "--config",
+        default=str(PROJECT_ROOT / "configs" / "train_config.yaml"),
+        help="Path to YAML training config.",
+    )
+    return parser.parse_args()
 
 
 def set_seed(seed: int) -> None:
@@ -120,8 +131,29 @@ def save_checkpoint(
     )
 
 
+def load_pretrained_weights(
+    model: nn.Module,
+    weights_path: str | Path | None,
+    device: torch.device,
+) -> None:
+    if not weights_path:
+        return
+
+    path = PROJECT_ROOT / weights_path
+    if not path.exists():
+        raise FileNotFoundError(f"Pretrained weights not found: {path}")
+
+    checkpoint = torch.load(path, map_location=device)
+    state_dict = checkpoint.get("model_state_dict", checkpoint)
+    model.load_state_dict(state_dict)
+    print(f"Loaded pretrained weights: {path}")
+
+
 def main() -> None:
-    config_path = PROJECT_ROOT / "configs" / "train_config.yaml"
+    args = parse_args()
+    config_path = Path(args.config)
+    if not config_path.is_absolute():
+        config_path = PROJECT_ROOT / config_path
     config = load_config(config_path)
     set_seed(config["training"]["seed"])
 
@@ -168,6 +200,11 @@ def main() -> None:
         out_channels=1,
         features=config["model"]["features"],
     ).to(device)
+    load_pretrained_weights(
+        model,
+        config["training"].get("pretrained_weights"),
+        device,
+    )
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config["training"]["learning_rate"])
     bce_loss = nn.BCEWithLogitsLoss()

@@ -95,10 +95,57 @@ python main.py
 python training/train.py
 ```
 
+Можно передать другой конфиг:
+
+```bash
+python training/train.py --config configs/loveda_pretrain_config.yaml
+```
+
 Во время обучения после каждой эпохи выводятся `loss`, `IoU`, `Dice` и `PixelAcc`. Модели сохраняются в:
 
 - `weights/best_unet.pth` — лучшая модель по IoU на валидации;
 - `weights/last_unet.pth` — модель после последней эпохи.
+
+## Улучшенное обучение на LoveDA
+
+Для повышения точности рекомендуется сначала обучить модель на большом датасете LoveDA, а затем дообучить её на Urban Tree Segmentation India.
+
+LoveDA — многоклассовый датасет. Для этой задачи скрипт подготовки преобразует его маски в бинарный формат:
+
+- классы `6` и `7` (`forest`, `agriculture`) -> `255`;
+- остальные классы -> `0`.
+
+Подготовка LoveDA через Kaggle-зеркало:
+
+```bash
+python training/prepare_loveda_dataset.py
+```
+
+Если LoveDA уже скачан и распакован в `dataset_raw/loveda`:
+
+```bash
+python training/prepare_loveda_dataset.py --skip-download
+```
+
+Повторная подготовка с очисткой старой выходной папки:
+
+```bash
+python training/prepare_loveda_dataset.py --skip-download --overwrite
+```
+
+Предобучение на LoveDA:
+
+```bash
+python training/train.py --config configs/loveda_pretrain_config.yaml
+```
+
+Дообучение на Urban Tree Segmentation India:
+
+```bash
+python training/train.py --config configs/urban_finetune_config.yaml
+```
+
+После дообучения GUI будет использовать файл `weights/best_unet.pth`.
 
 ## Предсказание маски
 
