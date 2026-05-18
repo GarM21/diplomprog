@@ -13,8 +13,10 @@ class ImageView(QLabel):
         super().__init__(title)
         self._pixmap: QPixmap | None = None
         self.setAlignment(Qt.AlignCenter)
-        self.setMinimumSize(360, 280)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setMinimumSize(300, 220)
+        self.setMaximumHeight(520)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.setScaledContents(False)
         self.setStyleSheet(
             """
             QLabel {
@@ -32,6 +34,7 @@ class ImageView(QLabel):
 
     def clear_image(self, placeholder: str) -> None:
         self._pixmap = None
+        self.clear()
         self.setText(placeholder)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 - Qt method name
@@ -42,8 +45,12 @@ class ImageView(QLabel):
         if self._pixmap is None:
             return
 
+        available_size = self.contentsRect().size()
+        if available_size.width() <= 0 or available_size.height() <= 0:
+            return
+
         scaled = self._pixmap.scaled(
-            self.size(),
+            available_size,
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation,
         )
