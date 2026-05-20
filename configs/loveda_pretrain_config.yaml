@@ -20,3 +20,4 @@ training:
 paths:
   best_model: weights/loveda_best_unet.pth
   last_model: weights/loveda_last_unet.pth
+  history_csv: reports/loveda_pretrain_history.csv

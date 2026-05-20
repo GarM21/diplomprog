@@ -20,3 +20,4 @@ training:
 paths:
   best_model: weights/best_unet.pth
   last_model: weights/last_unet.pth
+  history_csv: reports/urban_finetune_history.csv

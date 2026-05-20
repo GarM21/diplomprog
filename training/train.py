@@ -1,5 +1,6 @@
 from pathlib import Path
 import argparse
+import csv
 import random
 import sys
 from typing import Any
@@ -131,6 +132,42 @@ def save_checkpoint(
     )
 
 
+def save_epoch_metrics(
+    path: Path,
+    epoch: int,
+    train_loss: float,
+    val_metrics: dict[str, float],
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    file_exists = path.exists()
+
+    with open(path, "a", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[
+                "epoch",
+                "train_loss",
+                "val_loss",
+                "iou",
+                "dice",
+                "pixel_accuracy",
+            ],
+        )
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(
+            {
+                "epoch": epoch,
+                "train_loss": f"{train_loss:.6f}",
+                "val_loss": f"{val_metrics['loss']:.6f}",
+                "iou": f"{val_metrics['iou']:.6f}",
+                "dice": f"{val_metrics['dice']:.6f}",
+                "pixel_accuracy": f"{val_metrics['pixel_accuracy']:.6f}",
+            }
+        )
+
+
 def load_pretrained_weights(
     model: nn.Module,
     weights_path: str | Path | None,
@@ -213,6 +250,12 @@ def main() -> None:
     best_iou = -1.0
     best_path = PROJECT_ROOT / config["paths"]["best_model"]
     last_path = PROJECT_ROOT / config["paths"]["last_model"]
+    history_path = PROJECT_ROOT / config["paths"].get(
+        "history_csv",
+        "reports/training_history.csv",
+    )
+    if history_path.exists():
+        history_path.unlink()
 
     print(f"Device: {device}")
     print(f"Train samples: {len(train_dataset)} | Val samples: {len(val_dataset)}")
@@ -236,6 +279,7 @@ def main() -> None:
         )
 
         save_checkpoint(last_path, model, optimizer, epoch, val_metrics, config)
+        save_epoch_metrics(history_path, epoch, train_loss, val_metrics)
         if val_metrics["iou"] > best_iou:
             best_iou = val_metrics["iou"]
             save_checkpoint(best_path, model, optimizer, epoch, val_metrics, config)
